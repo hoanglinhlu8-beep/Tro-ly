@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trợ lý nhận xét năng lực học sinh tiểu học</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--tx:#1f2937;--mu:#6b7280;--bd:#e2e5ec;--pr:#2563eb;--pt:#fff;--T:#15803d;--H:#b45309;--C:#b91c1c;--wa:#fef3c7;--er:#fee2e2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--tx:#f1f5f9;--mu:#94a3b8;--bd:#334155;--pr:#60a5fa;--pt:#0b1220;--T:#4ade80;--H:#fbbf24;--C:#f87171;--wa:#3b3417;--er:#4a1d1d;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:18px 20px 8px;max-width:1280px;margin:auto}h1{font-size:21px;margin:0}header p{margin:2px 0 0;color:var(--mu);font-size:13px}
+main{max-width:1280px;margin:auto;padding:8px 20px 40px}
+.tabs{display:flex;gap:6px;margin:10px 0}.tabs button{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 16px;border-radius:9px;cursor:pointer;font-size:14px}.tabs button.on{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}.row label{display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px}
+input,select,textarea,button{font:inherit;color:var(--tx)}input,select,textarea{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+button.b{background:var(--pr);color:var(--pt);border:0;padding:8px 14px;border-radius:8px;cursor:pointer}button.s{background:transparent;border:1px solid var(--bd);padding:7px 12px;border-radius:8px;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+.stats{display:flex;gap:10px;flex-wrap:wrap}.st{flex:1;min-width:110px;border:1px solid var(--bd);border-radius:10px;padding:8px 12px}.st b{font-size:22px;display:block}.st span{font-size:12px;color:var(--mu)}
+.T{color:var(--T)}.H{color:var(--H)}.C{color:var(--C)}
+.drop{border:2px dashed var(--bd);border-radius:12px;padding:22px;text-align:center;cursor:pointer}.drop:hover{border-color:var(--pr)}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:10px}table{border-collapse:collapse;width:100%;background:var(--card)}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top;font-size:14px}th{background:var(--bg);font-size:12px;color:var(--mu);position:sticky;top:0}
+td textarea{width:100%;min-width:320px;min-height:54px;resize:vertical}td input.sc{width:64px}tr.w{background:var(--wa)}tr.e{background:var(--er)}.fl{font-size:12px;color:var(--H)}.mu{color:var(--mu);font-size:12px}
+details{margin-top:8px}summary{cursor:pointer;color:var(--pr)}#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#111827;color:#fff;padding:9px 16px;border-radius:9px;display:none;z-index:9;max-width:90vw}
+.hide{display:none!important}ol li{margin:4px 0}
+</style></head><body>
+<header><h1>📝 Trợ lý nhận xét năng lực học sinh tiểu học</h1><p>Tải bảng điểm Excel → chọn mức T/H/C → tạo nhận xét → tải file về. Họ tên học sinh luôn ở trên máy của thầy/cô; khi nhờ AI viết nhận xét chỉ gửi môn, kỳ, mức T/H/C và điểm (không gửi họ tên).</p></header>
+<main>
+<div class="tabs"><button data-t="a" class="on">1. Danh sách &amp; nhận xét</button><button data-t="b">2. Kho nhận xét</button><button data-t="c">Hướng dẫn</button></div>
+
+<section id="ta">
+<div class="card"><div class="drop" id="drop">📂 <b>Bấm để chọn file Excel (.xls hoặc .xlsx)</b> hoặc kéo thả vào đây<div class="mu" id="fname">Chưa có file</div></div><input type="file" id="file" accept=".xls,.xlsx" class="hide"></div>
+
+<div id="work" class="hide">
+<div class="card stats" id="stats"></div>
+
+<div class="card"><b>Thông tin &amp; ghép cột</b> <span class="mu">(đã tự nhận diện, thầy/cô có thể chỉnh)</span>
+<div class="row" style="margin-top:8px">
+<label>Trang tính<select id="sheet"></select></label>
+<label>Dòng tiêu đề<input type="number" id="hdr" min="1" style="width:70px"></label>
+<label>Cột họ tên<select id="mName"></select></label>
+<label>Cột nhận xét<select id="mCmt"></select></label>
+<label>Cột xếp loại<select id="mXl"></select></label>
+<label>Cột điểm<select id="mSc"></select></label>
+</div>
+<div class="row" style="margin-top:8px">
+<label>Môn học / nội dung<input id="subj" style="width:300px"></label>
+<label>Kỳ đánh giá<select id="term"><option value="">(chưa rõ)</option><option value="GK1">Giữa kỳ I</option><option value="CK1">Cuối kỳ I</option><option value="GK2">Giữa kỳ II</option><option value="CK2">Cuối kỳ II</option></select></label>
+<label>Lớp<input id="cls" style="width:120px"></label>
+</div>
+<div class="row" id="scBox" style="margin-top:8px"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="useSc" checked> Dùng điểm khi nhận xét</label>
+<label>Điểm “cao” từ<input type="number" id="hi" value="8" step="0.5" style="width:70px"></label><label>Điểm “thấp” dưới<input type="number" id="lo" value="6" step="0.5" style="width:70px"></label>
+<span class="mu" style="max-width:420px">Ngưỡng điểm do thầy/cô tự đặt để chọn cách diễn đạt, không phải quy định của Thông tư 27. Ứng dụng không tự đổi mức xếp loại.</span></div>
+<details><summary>Nhập nhanh xếp loại / điểm (dán từ Excel)</summary>
+<div class="row" style="margin-top:6px"><label>Dán cột xếp loại (mỗi học sinh một dòng)<textarea id="pXl" rows="3" style="width:200px"></textarea></label><button class="s" id="bXl">Điền xếp loại theo thứ tự</button>
+<label>Dán cột điểm<textarea id="pSc" rows="3" style="width:200px"></textarea></label><button class="s" id="bSc">Điền điểm theo thứ tự</button>
+<label>Đặt mức cho các dòng chưa có<select id="fillLv"><option>T</option><option>H</option><option>C</option></select></label><button class="s" id="bFill">Áp dụng</button></div></details>
+</div>
+
+<div class="card"><div class="row">
+<button class="b" id="bGen">✨ Tạo nhận xét cho cả lớp (AI)</button>
+<button class="s" id="bGenSel">Tạo lại mục đã chọn</button>
+<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ovr"> Ghi đè cả nhận xét đã sửa/có sẵn</label>
+<label>Lọc<select id="fLv"><option value="">Tất cả</option><option>T</option><option>H</option><option>C</option><option value="none">Chưa/sai xếp loại</option></select></label>
+<label>Tìm tên<input id="q" placeholder="Nhập tên…"></label>
+<button class="s" id="bBank">📥 Lưu nhận xét đã sửa vào kho</button>
+<button class="b" id="bExp" style="margin-left:auto">⬇️ Tải file Excel</button></div>
+<details id="aiSet"><summary>⚙️ Cài đặt AI</summary><div class="row" style="margin-top:6px"><label>API key của Anthropic<input type="password" id="aiKey" placeholder="sk-ant-…" style="width:300px" autocomplete="off"></label><label>API key Gemini<input type="password" id="aiKeyG" placeholder="AIza… hoặc AQ.…" style="width:260px" autocomplete="off"></label><label>Mô hình<select id="aiModel"><option value="gemini-2.5-flash">Gemini 2.5 Flash (nhanh, rẻ)</option><option value="gemini-2.5-pro">Gemini 2.5 Pro (chất lượng)</option><option value="claude-sonnet-5-5">Claude Sonnet 5.5 (chất lượng)</option><option value="claude-haiku-5-5">Claude Haiku 5.5 (nhanh, rẻ)</option></select></label><button class="s" id="aiSave">Lưu cài đặt</button></div><div class="mu" id="aiNote" style="margin-top:4px"></div><div class="mu">Key chỉ lưu trên trình duyệt của thầy/cô, gửi thẳng tới nhà cung cấp AI (Google/Anthropic) và không nằm trong file. Mỗi giáo viên nên dùng key riêng; không nhúng key vào file web.</div></details>
+<div class="mu" style="margin-top:6px">AI (Claude) viết nhận xét riêng cho từng em theo môn, kỳ và xếp loại; điểm chỉ là căn cứ phụ. Câu mẫu trong kho được dùng làm văn phong tham khảo. Nếu AI không dùng được, ứng dụng tự dùng kho mẫu. Thầy/cô nên đọc và chỉnh lại trước khi dùng.</div></div>
+
+<div class="tw"><table><thead><tr><th><input type="checkbox" id="all"></th><th>STT</th><th>Họ và tên</th><th class="sch">Điểm</th><th>Xếp loại</th><th style="min-width:340px">Nhận xét (sửa trực tiếp)</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+</section>
+
+<section id="tb2" class="hide">
+<div class="card"><b>Thêm / sửa câu nhận xét</b>
+<div class="row" style="margin-top:8px">
+<label>Mức<select id="bL"><option>T</option><option>H</option><option>C</option></select></label>
+<label>Theo điểm<select id="bB"><option value="">Mọi điểm</option><option value="cao">Điểm cao</option><option value="tb">Điểm trung bình</option><option value="thap">Điểm thấp</option></select></label>
+<label>Kỳ<select id="bT"><option value="*">Mọi kỳ</option><option value="GK1">Giữa kỳ I</option><option value="CK1">Cuối kỳ I</option><option value="GK2">Giữa kỳ II</option><option value="CK2">Cuối kỳ II</option></select></label>
+<label>Môn (để * nếu dùng chung)<input id="bS" value="*" style="width:200px"></label></div>
+<textarea id="bX" rows="2" style="width:100%;margin-top:8px" placeholder="Nội dung câu nhận xét…"></textarea>
+<div class="row" style="margin-top:8px"><button class="b" id="bAdd">Thêm câu</button><button class="s" id="bCancel">Hủy sửa</button>
+<button class="s" id="bExpJ" style="margin-left:auto">Xuất kho (JSON)</button><button class="s" id="bImpJ">Nhập kho (JSON)</button><input type="file" id="jf" accept=".json" class="hide"></div></div>
+<div class="card"><div class="row"><label>Mức<select id="kL"><option value="">Tất cả</option><option>T</option><option>H</option><option>C</option></select></label>
+<label>Kỳ<select id="kT"><option value="">Tất cả</option><option value="*">Mọi kỳ</option><option value="GK1">Giữa kỳ I</option><option value="CK1">Cuối kỳ I</option><option value="GK2">Giữa kỳ II</option><option value="CK2">Cuối kỳ II</option></select></label>
+<label>Tìm (nội dung / môn)<input id="kQ" style="width:240px"></label><span class="mu" id="kN"></span></div></div>
+<div class="tw"><table><thead><tr><th>Mức</th><th>Môn</th><th>Kỳ</th><th>Điểm</th><th>Nhận xét</th><th></th></tr></thead><tbody id="kb"></tbody></table></div>
+</section>
+
+<section id="tc" class="hide"><div class="card"><ol>
+<li>Bấm <b>Chọn file Excel</b> và tải bảng điểm (.xls hoặc .xlsx). Ứng dụng tự tìm dòng tiêu đề, cột Họ tên (kể cả khi tách hai cột Họ đệm / Tên), Nhận xét, XL, điểm KT, môn học, kỳ và lớp.</li>
+<li>Nếu file chưa có xếp loại (như hai file mẫu), nhập T/H/C trực tiếp ở cột <b>Xếp loại</b>, hoặc dán cả cột từ Excel vào ô <b>Nhập nhanh</b>. Ứng dụng <b>không bao giờ tự đổi</b> mức T/H/C của học sinh.</li>
+<li>Kiểm tra môn học và kỳ, rồi bấm <b>Tạo nhận xét cho cả lớp</b>. Sửa trực tiếp từng ô; bấm 🔄 để tạo lại cho một em.</li>
+<li>Bấm <b>Tải file Excel</b>: file gốc được giữ nguyên bố cục, nhận xét điền vào cột Nhận xét, kèm thêm trang “Tổng hợp”.</li>
+<li>Tab <b>Kho nhận xét</b>: thêm, sửa, xóa câu theo mức, môn, kỳ, điểm. Câu có môn và kỳ khớp được ưu tiên; câu đã sửa có thể lưu vào kho để dùng lần sau. Kho và danh sách làm dở được lưu trên trình duyệt này.</li>
+<li>Ý nghĩa T/H/C (thường là Hoàn thành tốt / Hoàn thành / Chưa hoàn thành) do thầy/cô quy ước và xác nhận. Dòng tô vàng/đỏ là chỗ cần kiểm tra (thiếu điểm, thiếu xếp loại, điểm và xếp loại chưa khớp, trùng tên).</li></ol></div></section>
+</main><div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').trim();
+const TN={GK1:'Giữa kỳ I',CK1:'Cuối kỳ I',GK2:'Giữa kỳ II',CK2:'Cuối kỳ II','*':'Mọi kỳ'},BN={'':'Mọi điểm',cao:'Cao',tb:'Trung bình',thap:'Thấp'};
+let uid=Date.now();
+const SEED=[
+['T','','Em nắm vững nội dung đã học và hoàn thành tốt các yêu cầu đánh giá.'],['T','','Em hoàn thành tốt các nhiệm vụ học tập trong giai đoạn này, cần tiếp tục phát huy.'],['T','','Kết quả học tập của em tốt, em nên tiếp tục phát huy và mở rộng thêm kiến thức.'],['T','','Em đáp ứng tốt yêu cầu cần đạt của nội dung đã học, hãy duy trì kết quả này.'],['T','','Em thể hiện kết quả học tập tốt, cần tiếp tục phát huy khả năng vận dụng kiến thức.'],['T','','Em hoàn thành tốt nội dung đánh giá, hãy tiếp tục giữ vững và phát huy nhé.'],
+['T','cao','Em đạt kết quả cao ở nội dung đánh giá, nắm chắc kiến thức đã học; cần tiếp tục phát huy.'],['T','cao','Em hoàn thành tốt với kết quả bài kiểm tra cao; em có thể thử sức với các nhiệm vụ nâng cao hơn.'],['T','tb','Em hoàn thành tốt yêu cầu đánh giá, nên luyện tập thêm để kết quả thêm vững vàng.'],
+['H','','Em hoàn thành các yêu cầu cơ bản, cần luyện tập thêm để vận dụng kiến thức linh hoạt hơn.'],['H','','Em nắm được nội dung chính, nên củng cố thêm những kiến thức còn chưa vững.'],['H','','Em thực hiện được các nhiệm vụ học tập, cần rèn luyện thêm để nâng cao kết quả.'],['H','','Em hoàn thành yêu cầu đánh giá, hãy luyện tập thường xuyên để tiến bộ hơn.'],['H','','Em đã đạt yêu cầu của nội dung học, cố gắng ôn luyện thêm để kết quả tốt hơn.'],
+['H','cao','Em cơ bản nắm vững kiến thức, cần phát huy khả năng vận dụng để đạt kết quả tốt hơn.'],['H','cao','Em hoàn thành tương đối tốt nội dung đánh giá, hãy luyện tập thêm để đạt mức cao hơn.'],
+['H','thap','Em đã đạt yêu cầu ở mức cơ bản, cần củng cố thêm kiến thức đã học và luyện tập thường xuyên.'],['H','thap','Em hoàn thành yêu cầu ở mức tối thiểu, cần được hỗ trợ ôn lại những nội dung còn chưa vững.'],['H','thap','Em đã hoàn thành yêu cầu cơ bản, hãy ôn lại các nội dung đã học để tiến bộ hơn.'],
+['C','','Em cần được hỗ trợ củng cố kiến thức cơ bản và luyện tập thêm các nhiệm vụ đã học.'],['C','','Em cần thực hành thêm theo từng bước để hoàn thành tốt hơn các yêu cầu học tập.'],['C','','Em cần được hướng dẫn và hỗ trợ thường xuyên để từng bước cải thiện kết quả học tập.'],['C','','Em chưa hoàn thành một số yêu cầu, cần ôn lại nội dung đã học với sự hướng dẫn của thầy cô.'],['C','','Em cần luyện tập nhiều hơn từng nội dung đã học, em sẽ tiến bộ nếu kiên trì rèn luyện.'],
+['C','thap','Em chưa đạt yêu cầu của bài đánh giá, cần được hỗ trợ ôn lại kiến thức cơ bản từng bước.'],['C','thap','Em cần luyện tập thêm với sự giúp đỡ của thầy cô; em hoàn toàn có thể tiến bộ nếu cố gắng.'],
+['T','','Em hiểu nội dung Công nghệ đã học và hoàn thành tốt yêu cầu đánh giá, cần tiếp tục phát huy.','công nghệ'],['H','','Em hoàn thành yêu cầu của môn Công nghệ, cần luyện tập thêm để nắm chắc nội dung đã học.','công nghệ'],['C','','Em cần được hỗ trợ ôn lại nội dung Công nghệ đã học và luyện tập thêm từng bước.','công nghệ']
+].map(a=>({id:++uid,lvl:a[0],band:a[1],text:a[2],subj:a[3]||'*',term:'*'}));
+let bank=SEED;
+let S={wb:null,sheet:'',off:{r:0,c:0},g:[],hdr:0,map:{name:-1,cmt:-1,xl:-1,sc:-1,stt:-1},meta:{subject:'',term:'',cls:''},rows:[]},editId=null,delArm=null;
+try{const b=JSON.parse(localStorage.getItem('tl_bank')||'null');if(Array.isArray(b)&&b.length)bank=b;const s=JSON.parse(localStorage.getItem('tl_sess')||'null');if(s&&s.rows&&s.rows.length){S.rows=s.rows;S.meta=s.meta;S.map=s.map||S.map;S.fname=s.fname}}catch(e){}
+function save(){try{localStorage.setItem('tl_bank',JSON.stringify(bank));localStorage.setItem('tl_sess',JSON.stringify({rows:S.rows,meta:S.meta,map:S.map,fname:S.fname}))}catch(e){}}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',3500)}
+const colL=j=>XLSX.utils.encode_col(j);
+const hasSc=()=>S.map.sc>=0;
+
+/* ---------- Nhập file ---------- */
+function loadFile(f){if(!f)return;const rd=new FileReader();rd.onload=e=>{try{S.wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});S.fname=f.name;$('#fname').textContent=f.name;
+const sel=$('#sheet');sel.innerHTML=S.wb.SheetNames.map(n=>`<option>${esc(n)}</option>`).join('');S.sheet=S.wb.SheetNames[0];sel.value=S.sheet;parseSheet();toast('Đã đọc file: '+S.rows.length+' học sinh')}catch(err){toast('Không đọc được file. Hãy kiểm tra đây là file .xls/.xlsx hợp lệ, hoặc lưu lại thành .xlsx rồi thử lại.')}};rd.readAsArrayBuffer(f)}
+function parseSheet(){const ws=S.wb.Sheets[S.sheet];const rg=XLSX.utils.decode_range(ws['!ref']||'A1');S.off=rg.s;S.rg=rg;S.g=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+let h=S.g.findIndex(r=>r.some(c=>norm(c)==='ho va ten'));if(h<0)h=S.g.findIndex(r=>r.filter(c=>String(c).trim()!=='').length>=3);S.hdr=Math.max(h,0);detect();buildRows();render()}
+function detect(){const hd=S.g[S.hdr]||[],m={name:-1,cmt:-1,xl:-1,sc:-1,stt:-1};
+hd.forEach((c,j)=>{const n=norm(c);if(n==='ho va ten'&&m.name<0)m.name=j;else if(n==='nhan xet'&&m.cmt<0)m.cmt=j;else if(/^xl\b/.test(n)&&m.xl<0)m.xl=j;else if((/^kt\b/.test(n)||/^diem/.test(n))&&m.sc<0)m.sc=j;else if(n==='stt'&&m.stt<0)m.stt=j});
+if(m.xl<0){const j=hd.findIndex(c=>/xep loai/.test(norm(c)));m.xl=j}S.map=m;
+const tx=S.g.slice(0,Math.max(S.hdr,8)).flat().join(' ').normalize('NFC'),n=norm(tx);let t='';const k=n.match(/(giua|cuoi) ky (1|2)/);if(k)t=(k[1]==='giua'?'GK':'CK')+k[2];
+const sj=tx.match(/MÔN\s+(.+?)\s+-\s+HỌC\s+KỲ/i),cl=tx.match(/Lớp\s+(.+?)(?:\s{2,}|$)/i);S.meta={subject:sj?sj[1].trim():'',term:t,cls:cl?cl[1].trim():''}}
+function buildRows(){const g=S.g,h=g[S.hdr]||[],m=S.map,out=[];const two=m.name>=0&&String(h[m.name+1]??'').trim()===''&&m.name+1!==m.cmt;
+for(let r=S.hdr+1;r<g.length;r++){const x=g[r];if(m.stt>=0&&String(x[m.stt]).trim()!==''&&isNaN(+x[m.stt]))continue;
+const nm=m.name<0?'':[x[m.name],two?x[m.name+1]:''].map(v=>String(v??'').trim()).filter(Boolean).join(' ');if(!nm)continue;
+let sc=null;if(m.sc>=0){const t=String(x[m.sc]??'').trim().replace(',','.');if(t!==''&&!isNaN(+t))sc=+t}
+out.push({r,stt:m.stt>=0?x[m.stt]:out.length+1,name:nm,xl:m.xl>=0?String(x[m.xl]??'').trim().toUpperCase():'',sc,cmt:m.cmt>=0?String(x[m.cmt]??''):'',auto:'',sel:false})}
+S.rows=out;save()}
+
+/* ---------- Tạo nhận xét ---------- */
+function band(r){if(!$('#useSc').checked||!hasSc()||r.sc==null)return '';const hi=+$('#hi').value,lo=+$('#lo').value;return r.sc>=hi?'cao':r.sc<lo?'thap':'tb'}
+function gen(r,cnt){if(!'THC'.includes(r.xl)||r.xl.length!==1)return '';const sj=norm(S.meta.subject),tm=S.meta.term;
+const c=bank.filter(b=>b.lvl===r.xl&&(b.term==='*'||b.term===tm)),bd=band(r),ok=b=>b.subj==='*'||sj.includes(norm(b.subj));
+const tiers=[];if(bd)tiers.push(c.filter(b=>b.band===bd));tiers.push(c.filter(b=>!b.band));let pool=[];
+for(const t of tiers){const sp=t.filter(b=>b.subj!=='*'&&ok(b)),ge=t.filter(b=>b.subj==='*');pool=sp.length>=3?sp:sp.concat(ge);if(pool.length)break}
+if(!pool.length)return '';pool=pool.slice().sort(()=>Math.random()-.5);let best=pool[0];pool.forEach(b=>{if((cnt[b.id]||0)<(cnt[best.id]||0))best=b});cnt[best.id]=(cnt[best.id]||0)+1;return best.text}
+function genAll(onlySel){const cnt={};let n=0,sk=0;S.rows.forEach(r=>{if(onlySel&&!r.sel)return;const kept=r.cmt&&r.cmt!==r.auto&&!$('#ovr').checked&&!onlySel;if(kept){sk++;return}const t=gen(r,cnt);if(t){r.auto=r.cmt=t;n++}});
+save();render();toast(`Đã tạo ${n} nhận xét`+(sk?`, giữ nguyên ${sk} nhận xét đã có/đã sửa`:'')+(n===0&&!sk?'. Hãy nhập xếp loại T/H/C trước.':''))}
+
+/* ---------- AI viết nhận xét ---------- */
+async function aiCall(p){let sm=null;try{sm=await claude.use('sample')}catch(e){}
+if(sm){const r=await sm(p,{modelTier:'default',cache:false});return r.text}
+if(AIM.startsWith('gemini')){if(!AIG)throw {code:'chưa nhập API key Gemini ở mục Cài đặt AI'};
+const g=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+AIM+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':AIG},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{temperature:1}})});
+let k={};try{k=await g.json()}catch(e){}if(!g.ok)throw {code:(k.error&&k.error.message)||('lỗi '+g.status)};
+return ((k.candidates&&k.candidates[0]&&k.candidates[0].content&&k.candidates[0].content.parts)||[]).map(c=>c.text||'').join('')}
+if(!AIK)throw {code:'chưa nhập API key ở mục Cài đặt AI'};
+const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':AIK,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AIM,max_tokens:4000,messages:[{role:'user',content:p}]})});
+let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw {code:(j.error&&j.error.message)||('lỗi '+r.status)};return (j.content||[]).map(c=>c.text||'').join('')}
+async function aiBatch(part){
+const sj=S.meta.subject||'(chưa rõ môn)',tm=TN[S.meta.term]||'(chưa rõ kỳ)',us=$('#useSc').checked&&hasSc(),nsj=norm(S.meta.subject);
+const items=part.map((i,k)=>{const r=S.rows[i];return {id:k+1,xep_loai:r.xl,diem:us&&r.sc!=null?r.sc:null}});
+let ex='';['T','H','C'].forEach(l=>{const e=bank.filter(b=>b.lvl===l&&(b.term==='*'||b.term===S.meta.term)&&(b.subj==='*'||nsj.includes(norm(b.subj)))).sort(()=>Math.random()-.5).slice(0,3).map(b=>'- '+b.text);if(e.length)ex+=`Mức ${l}:\n${e.join('\n')}\n`});
+const p=`Bạn là giáo viên tiểu học Việt Nam, am hiểu Thông tư 27/2020/TT-BGDĐT. Hãy viết nhận xét cho từng học sinh dưới đây.
+Môn/nội dung đánh giá: ${sj}
+Kỳ đánh giá: ${tm}
+Ý nghĩa mức (giáo viên quy ước): T = hoàn thành tốt, H = hoàn thành, C = chưa hoàn thành.
+QUY TẮC:
+- Căn cứ CHÍNH là xep_loai; nhận xét phải đúng mức, không mâu thuẫn với mức.
+- diem (nếu có) chỉ là căn cứ PHỤ để điều chỉnh sắc thái (từ ${$('#hi').value} trở lên là điểm cao, dưới ${$('#lo').value} là điểm thấp, ngưỡng do giáo viên đặt). Không dùng điểm để đổi mức; nếu điểm và mức lệch nhau thì bám theo mức và viết trung tính. Không nêu con số điểm trong nhận xét.
+- Gắn nhận xét với đúng môn và kỳ đánh giá; dùng nội dung/năng lực phù hợp môn đó ở mức khái quát.
+- Chỉ dựa trên dữ liệu được cung cấp. KHÔNG bịa hành vi, thái độ, kỹ năng, thành tích cụ thể (không nói chăm chỉ, hợp tác, sáng tạo, lười, thiếu ý thức...).
+- Mỗi nhận xét 1-2 câu, tối đa 35 từ, bắt đầu bằng “Em”, ngôn ngữ sư phạm tích cực, hợp lứa tuổi tiểu học; ghi nhận điều đã đạt (nếu có) và nêu hướng phát huy/củng cố; mức C dùng giọng nhẹ nhàng, khích lệ, nêu hướng hỗ trợ.
+- Không so sánh với học sinh khác. Các học sinh cùng mức vẫn phải diễn đạt KHÁC NHAU, không lặp câu.
+${ex?'Văn phong mẫu của giáo viên (chỉ tham khảo, không chép nguyên):\n'+ex:''}
+DỮ LIỆU: ${JSON.stringify(items)}
+Chỉ trả về một mảng JSON, không kèm giải thích hay markdown: [{"id":1,"nx":"..."}, ...] đủ ${items.length} phần tử.`;
+const res=await aiCall(p);let t=String(res||'').replace(/```json|```/g,'');const a=t.indexOf('['),b=t.lastIndexOf(']');if(a<0||b<0)throw {code:'bad_format'};
+const arr=JSON.parse(t.slice(a,b+1)),m={};arr.forEach(o=>{if(o&&typeof o.nx==='string'&&o.nx.trim())m[o.id]=o.nx.trim()});return m}
+async function aiRun(idx,sk){const bs=['#bGen','#bGenSel'].map($);bs.forEach(b=>b.disabled=true);let nA=0,nT=0,err='';const cnt={};
+for(let p=0;p<idx.length;p+=14){const part=idx.slice(p,p+14);toast(`AI đang viết nhận xét… ${Math.min(p+14,idx.length)}/${idx.length}`);let m=null;try{m=await aiBatch(part)}catch(e){err=(e&&(e.code||e.message))||'lỗi'}
+part.forEach((i,k)=>{const r=S.rows[i],t=m&&m[k+1];if(t){r.auto=r.cmt=t;nA++}else{const x=gen(r,cnt);if(x){r.auto=r.cmt=x;nT++}}});save();render()}
+bs.forEach(b=>b.disabled=false);
+toast(nT?`AI viết ${nA} nhận xét; ${nT} nhận xét dùng kho mẫu vì AI chưa phản hồi được (${err||'phản hồi sai định dạng'}). Có thể bấm 🔄 để thử lại.`:`AI đã viết ${nA} nhận xét`+(sk?`, giữ nguyên ${sk} nhận xét đã có/đã sửa`:''))}
+function aiAll(onlySel){const idx=[];let sk=0;S.rows.forEach((r,i)=>{if(onlySel&&!r.sel)return;if(!['T','H','C'].includes(r.xl))return;if(!onlySel&&r.cmt&&r.cmt!==r.auto&&!$('#ovr').checked){sk++;return}idx.push(i)});
+if(!idx.length)return toast(sk?'Các nhận xét đã có/đã sửa được giữ nguyên. Tick “Ghi đè” nếu muốn tạo lại.':'Hãy nhập xếp loại T/H/C cho học sinh trước.');aiRun(idx,sk)}
+/* ---------- Hiển thị ---------- */
+function flags(r,dup){const f=[];if(!r.xl)f.push('Thiếu xếp loại');else if(!['T','H','C'].includes(r.xl))f.push('Giá trị “'+r.xl+'” ngoài T/H/C');
+if(hasSc()&&r.sc==null)f.push('Thiếu điểm');
+if(hasSc()&&r.sc!=null&&$('#useSc').checked){const hi=+$('#hi').value,lo=+$('#lo').value;if(r.xl==='T'&&r.sc<lo)f.push('Điểm thấp nhưng xếp loại T, cần kiểm tra');if(r.xl==='C'&&r.sc>=hi)f.push('Điểm cao nhưng xếp loại C, cần kiểm tra')}
+if(dup[norm(r.name)]>1)f.push('Trùng họ tên');return f}
+function render(){const has=S.rows.length>0;$('#work').classList.toggle('hide',!has);if(!has)return;
+const hd=S.g[S.hdr]||[],mx=Math.max(hd.length,S.map.cmt+1,6);let o='';for(let j=0;j<mx;j++){const t=String(hd[j]??'').trim();if(t)o+=`<option value="${j}">${esc(t)} (cột ${colL(j)})</option>`}
+['mName:name','mCmt:cmt','mXl:xl','mSc:sc'].forEach(p=>{const[i,k]=p.split(':'),e=$('#'+i);e.innerHTML='<option value="-1">(không có)</option>'+o;e.value=S.map[k]});
+$('#hdr').value=S.hdr+1;$('#subj').value=S.meta.subject;$('#term').value=S.meta.term;$('#cls').value=S.meta.cls;$('#scBox').classList.toggle('hide',!hasSc());document.querySelectorAll('.sch').forEach(e=>e.classList.toggle('hide',!hasSc()));
+const dup={};S.rows.forEach(r=>dup[norm(r.name)]=(dup[norm(r.name)]||0)+1);
+const c={T:0,H:0,C:0,x:0};S.rows.forEach(r=>{if(c[r.xl]!==undefined&&r.xl.length===1)c[r.xl]++;else c.x++});
+$('#stats').innerHTML=`<div class="st"><b>${S.rows.length}</b><span>Học sinh</span></div><div class="st"><b class="T">${c.T}</b><span>Mức T</span></div><div class="st"><b class="H">${c.H}</b><span>Mức H</span></div><div class="st"><b class="C">${c.C}</b><span>Mức C</span></div><div class="st"><b>${c.x}</b><span>Chưa/sai xếp loại</span></div><div class="st"><b>${S.rows.filter(r=>r.cmt).length}</b><span>Đã có nhận xét</span></div>`;
+const fl=$('#fLv').value,q=norm($('#q').value);let h='';
+S.rows.forEach((r,i)=>{const ok1=!fl||(fl==='none'?!['T','H','C'].includes(r.xl):r.xl===fl);if(!ok1||(q&&!norm(r.name).includes(q)))return;const f=flags(r,dup),bad=f.some(x=>/Thiếu xếp|ngoài|kiểm tra/.test(x));
+const sel=['','T','H','C'].concat(['T','H','C',''].includes(r.xl)?[]:[r.xl]).map(v=>`<option ${v===r.xl?'selected':''}>${esc(v)}</option>`).join('');
+h+=`<tr class="${bad?'e':f.length?'w':''}"><td><input type="checkbox" data-a="sel" data-i="${i}" ${r.sel?'checked':''}></td><td>${esc(r.stt)}</td><td>${esc(r.name)}</td>${hasSc()?`<td><input class="sc" data-a="sc" data-i="${i}" value="${r.sc??''}"></td>`:''}<td><select data-a="xl" data-i="${i}">${sel}</select></td><td><textarea data-a="cmt" data-i="${i}">${esc(r.cmt)}</textarea>${f.length?`<div class="fl">⚠ ${esc(f.join(' · '))}</div>`:''}${r.cmt&&r.auto&&r.cmt!==r.auto?'<div class="mu">đã chỉnh sửa</div>':''}</td><td style="white-space:nowrap"><button class="s" title="Tạo lại" data-a="gen" data-i="${i}">🔄</button> <button class="s" title="Sao chép" data-a="cp" data-i="${i}">📋</button> <button class="s" title="Lưu vào kho" data-a="sv" data-i="${i}">📥</button></td></tr>`});
+$('#tb').innerHTML=h||'<tr><td colspan="7" class="mu">Không có học sinh phù hợp bộ lọc.</td></tr>'}
+
+/* ---------- Xuất Excel ---------- */
+const slug=s=>norm(s).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').toUpperCase();
+async function saveBlob(name,data){let d=null;try{d=await claude.use('downloads')}catch(e){}if(d){try{await d.save({filename:name,data});return}catch(e){if(e&&e.code==='declined')return}}
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click()}
+async function exportXlsx(){if(!S.rows.length)return;const m=S.map;let wb,ws;
+const sum=[['STT','Họ và tên','Điểm','Xếp loại','Nhận xét']].concat(S.rows.map(r=>[r.stt,r.name,r.sc??'',r.xl,r.cmt]));
+if(S.wb&&S.g.length){wb=S.wb;ws=wb.Sheets[S.sheet];const o=S.off;let cc=m.cmt;if(cc<0){cc=S.rg.e.c+1;S.rg.e.c=cc;ws['!ref']=XLSX.utils.encode_range(S.rg);ws[XLSX.utils.encode_cell({r:o.r+S.hdr,c:o.c+cc})]={t:'s',v:'Nhận xét'}}
+S.rows.forEach(r=>{const A=(c)=>XLSX.utils.encode_cell({r:o.r+r.r,c:o.c+c});if(r.cmt)ws[A(cc)]={t:'s',v:r.cmt};if(m.xl>=0&&r.xl)ws[A(m.xl)]={t:'s',v:r.xl};if(m.sc>=0&&r.sc!=null)ws[A(m.sc)]={t:'n',v:r.sc}});
+ws['!cols']=ws['!cols']||[];ws['!cols'][o.c+cc]={wch:80}}
+else{wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'Nhận xét')}
+const sn='Tổng hợp';if(wb.SheetNames.includes(sn)){delete wb.Sheets[sn];wb.SheetNames=wb.SheetNames.filter(x=>x!==sn)}
+const w2=XLSX.utils.aoa_to_sheet(sum);w2['!cols']=[{wch:6},{wch:28},{wch:8},{wch:10},{wch:90}];XLSX.utils.book_append_sheet(wb,w2,sn);
+const out=XLSX.write(wb,{type:'array',bookType:'xlsx'});const nm=`Nhan_xet_${S.meta.term||'KY'}_Lop_${slug(S.meta.cls)||'X'}.xlsx`;await saveBlob(nm,out);toast('Đã tạo file '+nm)}
+
+/* ---------- Kho nhận xét ---------- */
+function renderBank(){const L=$('#kL').value,T=$('#kT').value,q=norm($('#kQ').value);
+const l=bank.filter(b=>(!L||b.lvl===L)&&(!T||b.term===T)&&(!q||norm(b.text+' '+b.subj).includes(q)));$('#kN').textContent=l.length+'/'+bank.length+' câu';
+$('#kb').innerHTML=l.map(b=>`<tr><td class="${b.lvl}"><b>${b.lvl}</b></td><td>${esc(b.subj==='*'?'Dùng chung':b.subj)}</td><td>${TN[b.term]||b.term}</td><td>${BN[b.band]||''}</td><td>${esc(b.text)}</td><td style="white-space:nowrap"><button class="s" data-k="ed" data-id="${b.id}">Sửa</button> <button class="s" data-k="dl" data-id="${b.id}">${delArm===b.id?'Bấm lại để xóa':'Xóa'}</button></td></tr>`).join('')||'<tr><td colspan="6" class="mu">Chưa có câu nào.</td></tr>'}
+function addBank(o){const t=o.text.trim();if(!t)return false;if(bank.some(b=>b.lvl===o.lvl&&b.text===t&&b.subj===o.subj&&b.term===o.term&&b.band===o.band))return false;bank.push({id:++uid,lvl:o.lvl,band:o.band||'',text:t,subj:o.subj||'*',term:o.term||'*'});save();return true}
+
+/* ---------- Sự kiện ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));['a','b','c'].forEach(k=>$('#'+(k==='b'?'tb2':'t'+k)).classList.toggle('hide',k!==b.dataset.t));if(b.dataset.t==='b')renderBank()});
+$('#drop').onclick=()=>$('#file').click();$('#file').onchange=e=>loadFile(e.target.files[0]);
+$('#drop').ondragover=e=>e.preventDefault();$('#drop').ondrop=e=>{e.preventDefault();loadFile(e.dataTransfer.files[0])};
+$('#sheet').onchange=e=>{S.sheet=e.target.value;parseSheet()};
+$('#hdr').onchange=e=>{S.hdr=Math.max(0,(+e.target.value||1)-1);detect();buildRows();render()};
+[['mName','name'],['mCmt','cmt'],['mXl','xl'],['mSc','sc']].forEach(([i,k])=>$('#'+i).onchange=e=>{S.map[k]=+e.target.value;buildRows();render()});
+$('#subj').oninput=e=>{S.meta.subject=e.target.value;save()};$('#cls').oninput=e=>{S.meta.cls=e.target.value;save()};$('#term').onchange=e=>{S.meta.term=e.target.value;save()};
+['useSc','hi','lo'].forEach(i=>$('#'+i).onchange=render);
+$('#bGen').onclick=()=>aiAll(false);$('#bGenSel').onclick=()=>{if(!S.rows.some(r=>r.sel))return toast('Hãy tick chọn học sinh ở cột đầu bảng.');aiAll(true)};
+$('#fLv').onchange=render;$('#q').oninput=render;$('#all').onchange=e=>{S.rows.forEach(r=>r.sel=e.target.checked);render()};
+$('#bExp').onclick=exportXlsx;
+$('#bBank').onclick=()=>{let n=0;S.rows.forEach(r=>{if(r.cmt&&r.auto&&r.cmt!==r.auto&&'THC'.includes(r.xl)&&r.xl&&addBank({lvl:r.xl,band:'',text:r.cmt,subj:S.meta.subject,term:S.meta.term}))n++});toast(n?`Đã lưu ${n} câu vào kho`:'Chưa có nhận xét đã sửa nào để lưu.')};
+const pasteVals=t=>t.replace(/\r/g,'').split('\n').map(x=>x.trim());
+$('#bXl').onclick=()=>{const v=pasteVals($('#pXl').value);while(v.length&&v[v.length-1]==='')v.pop();S.rows.forEach((r,i)=>{if(i<v.length)r.xl=v[i].toUpperCase()});save();render();toast('Đã điền xếp loại cho '+Math.min(v.length,S.rows.length)+' dòng')};
+$('#bSc').onclick=()=>{if(!hasSc())return toast('File này chưa có cột điểm. Hãy chọn cột điểm ở phần ghép cột.');const v=pasteVals($('#pSc').value);S.rows.forEach((r,i)=>{if(i<v.length){const n=parseFloat(v[i].replace(',','.'));r.sc=isNaN(n)?null:n}});save();render();toast('Đã điền điểm')};
+$('#bFill').onclick=()=>{let n=0;S.rows.forEach(r=>{if(!r.xl){r.xl=$('#fillLv').value;n++}});save();render();toast(`Đã đặt mức ${$('#fillLv').value} cho ${n} học sinh chưa có xếp loại`)};
+$('#tb').addEventListener('input',e=>{const t=e.target;if(t.dataset.a==='cmt'){S.rows[t.dataset.i].cmt=t.value;save()}});
+$('#tb').addEventListener('change',e=>{const t=e.target,r=S.rows[t.dataset.i];if(!r)return;if(t.dataset.a==='sel')r.sel=t.checked;if(t.dataset.a==='xl'){r.xl=t.value;save();render()}if(t.dataset.a==='sc'){const n=parseFloat(t.value.replace(',','.'));r.sc=isNaN(n)?null:n;save();render()}});
+$('#tb').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const r=S.rows[t.dataset.i];const a=t.dataset.a;
+if(a==='gen'){if(!['T','H','C'].includes(r.xl))toast('Chọn xếp loại T/H/C cho học sinh này trước.');else aiRun([+t.dataset.i],0)}
+if(a==='cp'){const tx=r.cmt;(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(()=>toast('Đã sao chép'),()=>{const ta=document.createElement('textarea');ta.value=tx;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Đã sao chép')}catch(_){toast('Không sao chép được, hãy bôi đen và Ctrl+C')}ta.remove()})}
+if(a==='sv'){if(!['T','H','C'].includes(r.xl)||!r.cmt)return toast('Cần có xếp loại và nhận xét.');toast(addBank({lvl:r.xl,band:'',text:r.cmt,subj:S.meta.subject,term:S.meta.term})?'Đã lưu vào kho':'Câu này đã có trong kho')}});
+['kL','kT'].forEach(i=>$('#'+i).onchange=renderBank);$('#kQ').oninput=renderBank;
+$('#bAdd').onclick=()=>{const o={lvl:$('#bL').value,band:$('#bB').value,term:$('#bT').value,subj:$('#bS').value.trim()||'*',text:$('#bX').value};if(!o.text.trim())return toast('Hãy nhập nội dung câu nhận xét.');
+if(editId){const b=bank.find(x=>x.id===editId);if(b)Object.assign(b,o,{text:o.text.trim()});editId=null;$('#bAdd').textContent='Thêm câu';save();toast('Đã cập nhật câu')}else toast(addBank(o)?'Đã thêm vào kho':'Câu này đã có trong kho');$('#bX').value='';renderBank()};
+$('#bCancel').onclick=()=>{editId=null;$('#bX').value='';$('#bAdd').textContent='Thêm câu'};
+$('#kb').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const id=+t.dataset.id,b=bank.find(x=>x.id===id);
+if(t.dataset.k==='ed'){editId=id;$('#bL').value=b.lvl;$('#bB').value=b.band;$('#bT').value=b.term;$('#bS').value=b.subj;$('#bX').value=b.text;$('#bAdd').textContent='Lưu thay đổi';scrollTo(0,0)}
+if(t.dataset.k==='dl'){if(delArm===id){bank=bank.filter(x=>x.id!==id);delArm=null;save()}else delArm=id;renderBank()}});
+$('#bExpJ').onclick=()=>saveBlob('Kho_nhan_xet.json',new Blob([JSON.stringify(bank,null,1)],{type:'application/json'}));
+$('#bImpJ').onclick=()=>$('#jf').click();
+$('#jf').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const a=JSON.parse(rd.result);let n=0;(Array.isArray(a)?a:[]).forEach(o=>{if(['T','H','C'].includes(o.lvl)&&addBank(o))n++});toast(`Đã nhập ${n} câu mới`);renderBank()}catch(_){toast('File JSON không đúng định dạng kho nhận xét.')}};rd.readAsText(f)};
+let AIK='',AIG='',AIM='gemini-2.5-flash';try{AIK=localStorage.getItem('tl_key')||'';AIG=localStorage.getItem('tl_keyg')||'';AIM=localStorage.getItem('tl_model')||AIM}catch(e){}
+$('#aiKey').value=AIK;$('#aiKeyG').value=AIG;$('#aiModel').value=AIM;
+if(typeof claude==='undefined'){$('#aiSet').open=true;$('#aiNote').textContent='Đang chạy ngoài Claude nên cần API key riêng (Gemini hoặc Anthropic) để dùng AI.'}else $('#aiNote').textContent='Đang chạy trong Claude: không cần API key.';
+$('#aiSave').onclick=()=>{AIK=$('#aiKey').value.trim();AIG=$('#aiKeyG').value.trim();AIM=$('#aiModel').value;try{localStorage.setItem('tl_key',AIK);localStorage.setItem('tl_keyg',AIG);localStorage.setItem('tl_model',AIM)}catch(e){}toast('Đã lưu cài đặt AI trên trình duyệt này')};
+if(S.rows.length){$('#fname').textContent=(S.fname||'Phiên làm việc trước')+' (đã khôi phục, tải lại file gốc nếu muốn xuất đúng bố cục)';render()}
+</script></body></html>

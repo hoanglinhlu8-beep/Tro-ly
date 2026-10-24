@@ -1,0 +1,6 @@
+{
+  "name": "Trợ lý nhận xét năng lực học sinh tiểu học",
+  "description": "Ứng dụng hỗ trợ giáo viên tiểu học tạo nhận xét tự động bằng AI theo Thông tư 27/2020/TT-BGDĐT dựa trên điểm số và kỹ năng của học sinh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
